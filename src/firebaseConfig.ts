@@ -1,8 +1,8 @@
+// firebaseConfig.ts
 import { initializeApp } from "firebase/app";
 import { getFirestore } from "firebase/firestore";
+import { getStorage } from "firebase/storage";
 
-// TODO: Replace the following with your app's Firebase project configuration
-// See: https://support.google.com/firebase/answer/7015592
 const firebaseConfig = {
     apiKey: "AIzaSyB5q__Hv9ZEj8JjXUxjILcw_MlK-XvKK0g",
     authDomain: "catalogo-facil-d4f9e.firebaseapp.com",
@@ -16,6 +16,6 @@ const firebaseConfig = {
 // Initialize Firebase
 const app = initializeApp(firebaseConfig);
 
-
-// Initialize Cloud Firestore and get a reference to the service
-const db = getFirestore(app);
+// Initialize Firestore and Storage
+export const db = getFirestore(app);
+export const storage = getStorage(app);
