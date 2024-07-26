@@ -24,7 +24,7 @@ import { v4 as uuidv4 } from "uuid";
 const imageCollection = collection(db, "catalog");
 
 export async function addCatalogItem(imageFile: File, position: number) {
-  try {
+  try { 
     const docId = uuidv4();
     const storageRef = ref(storage, `catalog/${docId}`);
     await uploadBytes(storageRef, imageFile);
@@ -85,21 +85,27 @@ export async function updateCatalogItem(
 
 export async function deleteCatalogItem(docId: string) {
   try {
-    const docRef = doc(db, "catalog", docId);
-    const docSnap = await getDoc(docRef);
+      const docRef = doc(db, 'catalog', docId);
+      const docSnap = await getDoc(docRef);
 
-    if (docSnap.exists()) {
-      const imageUrl = docSnap.data().imageUrl;
-      if (imageUrl) {
-        const storageRef = ref(storage, `catalog/${docId}`);
-        await deleteObject(storageRef);
+      if (docSnap.exists()) {
+          const data = docSnap.data();
+          const imageUrl = data?.imageUrl;
+
+          if (imageUrl) {
+              // Extrai o caminho do arquivo da URL
+              const filePath = decodeURIComponent(imageUrl.split("/o/")[1].split("?")[0]);
+              const storageRef = ref(storage, filePath);
+              await deleteObject(storageRef);
+          }
+
+          await deleteDoc(docRef);
+          console.log("Item deletado com sucesso!");
+      } else {
+          console.log("Documento não encontrado!");
       }
-      await deleteDoc(docRef);
-      console.log("Imagem deletada com sucesso!");
-    } else {
-      console.log("Imagem não encontrada!");
-    }
   } catch (error) {
-    console.error("Erro ao deletar imagem: ", error);
+      console.error("Erro ao deletar item: ", error);
   }
 }
+
