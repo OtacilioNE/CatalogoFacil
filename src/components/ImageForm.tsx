@@ -1,5 +1,10 @@
 import React, { useState } from 'react';
 import { addCatalogItem, updateCatalogItem } from '../services/dataAcess/imageAcess';
+import { Button } from 'react-bootstrap';
+import Col from 'react-bootstrap/Col';
+import Form from 'react-bootstrap/Form';
+import Container from 'react-bootstrap/Container';
+import Row from 'react-bootstrap/Row';
 
 interface ImageFormProps {
   onSuccess: () => void;
@@ -24,17 +29,31 @@ const ImageForm: React.FC<ImageFormProps> = ({ onSuccess, imageId, initialPositi
   };
 
   return (
-    <form onSubmit={handleSubmit}>
-      <div>
-        <label>Image:</label>
-        <input type="file" onChange={(e) => setImage(e.target.files ? e.target.files[0] : null)} required />
-      </div>
-      <div>
-        <label>Position:</label>
-        <input type="number" value={position} onChange={(e) => setPosition(Number(e.target.value))} required />
-      </div>
-      <button type="submit">Submit</button>
-    </form>
+    <Form onSubmit={handleSubmit}>
+      <Container fluid>
+        <Row>
+          <Col>
+            <div>
+              <label style={{ fontSize: '18px' }}><strong>Imagem:</strong></label>
+              <div style={{border: '2px solid black'}}>
+                <input type="file" onChange={(e) => setImage(e.target.files ? e.target.files[0] : null)} required />
+              </div>
+            </div>
+          </Col>
+          <Col>
+            <div>
+              <label style={{ fontSize: '18px' }}><strong>Posição:</strong></label>
+              <br />
+              <div>
+                <input type="number" value={position} onChange={(e) => setPosition(Number(e.target.value))} required />
+              </div>
+            </div>
+          </Col>
+        </Row>
+        <br />
+        <Button type="submit">Adicionar Imagem</Button>
+      </Container>
+    </Form>
   );
 };
 

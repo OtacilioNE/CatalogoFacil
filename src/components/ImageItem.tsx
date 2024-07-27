@@ -17,10 +17,18 @@ const ImageItem: React.FC<ImageItemProps> = ({ image, onDelete }) => {
   };
 
   return (
-    <li>
-      <img src={image.imageUrl} alt={`Image ${image.position}`} />
-      <button onClick={handleDelete}>Delete</button>
-    </li>
+    <div className="card">
+      <div style={{ height: '300px', overflow: 'hidden' }}>
+        <img 
+          src={image.imageUrl} 
+          alt={`Image ${image.position}`} 
+          style={{ width: '100%', height: '100%', objectFit: 'cover' }} 
+        />
+      </div>
+      <div className="card-body">
+        <button className="btn btn-danger btn-sm" onClick={handleDelete}>Excluir</button>
+      </div>
+    </div>
   );
 };
 
