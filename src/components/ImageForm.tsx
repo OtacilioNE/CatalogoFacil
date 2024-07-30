@@ -4,10 +4,7 @@ import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { collection, addDoc } from 'firebase/firestore';
 import { addCatalogItem, updateCatalogItem } from '../services/dataAcess/imageAcess';
 import { ProgressBar, Button, Form, Container, Row, Col } from 'react-bootstrap';
-import * as pdfjsLib from 'pdfjs-dist';
-
-// Configure a URL do worker
-pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.0.0/pdf.worker.min.js';
+import JSZip from 'jszip';
 
 interface ImageFormProps {
   onSuccess: () => void;
@@ -27,10 +24,8 @@ const ImageForm: React.FC<ImageFormProps> = ({ onSuccess, imageId, initialPositi
       setLoading(true);
       try {
         if (imageId) {
-          // Atualiza uma imagem existente
           await updateCatalogItem(imageId, position, image);
         } else {
-          // Adiciona uma nova imagem
           await addCatalogItem(image, position);
         }
         onSuccess();
@@ -42,12 +37,12 @@ const ImageForm: React.FC<ImageFormProps> = ({ onSuccess, imageId, initialPositi
     }
   };
 
-  const handlePdfUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleZipUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (!file) return;
 
-    if (file.type !== 'application/pdf') {
-      console.error('Por favor, selecione um arquivo PDF.');
+    if (!file.name.endsWith('.zip')) {
+      console.error('Por favor, selecione um arquivo ZIP.');
       return;
     }
 
@@ -55,47 +50,43 @@ const ImageForm: React.FC<ImageFormProps> = ({ onSuccess, imageId, initialPositi
     setProgress(0);
 
     try {
-      const arrayBuffer = await file.arrayBuffer();
-      const pdfDoc = await pdfjsLib.getDocument(arrayBuffer).promise;
-      const numPages = pdfDoc.numPages;
+      const zip = new JSZip();
+      const zipContent = await zip.loadAsync(file);
+      const imageFiles = Object.keys(zipContent.files).filter((fileName) =>
+        /\.(jpe?g|png)$/i.test(fileName)
+      );
 
-      for (let i = 0; i < numPages; i++) {
-        const page = await pdfDoc.getPage(i + 1);
-        const viewport = page.getViewport({ scale: 1 });
-        const canvas = document.createElement('canvas');
-        canvas.width = viewport.width;
-        canvas.height = viewport.height;
-        const context = canvas.getContext('2d');
-        if (!context) throw new Error('Não foi possível obter o contexto do canvas.');
+      const totalFiles = imageFiles.length;
 
-        await page.render({
-          canvasContext: context,
-          viewport: viewport
-        }).promise;
+      for (let i = 0; i < totalFiles; i++) {
+        try {
+          const imageFileName = imageFiles[i];
+          const imageBlob = await zip.file(imageFileName)!.async('blob');
+          const imageId = `image-${i}-${Date.now()}`;
+          const storageRef = ref(storage, `catalog/${imageId}`);
+          await uploadBytes(storageRef, imageBlob);
+          console.log(`Imagem ${imageFileName} carregada para o armazenamento`);
 
-        const imageBlob = await new Promise<Blob | null>((resolve) => canvas.toBlob(resolve, 'image/jpeg'));
+          const downloadURL = await getDownloadURL(storageRef);
+          console.log(`URL de download obtida para ${imageFileName}: ${downloadURL}`);
 
-        if (!imageBlob) throw new Error('Não foi possível converter o canvas em Blob.');
+          const imageCollection = collection(db, 'catalog');
+          await addDoc(imageCollection, {
+            imageUrl: downloadURL,
+            position: i + 1,
+            createdAt: new Date(),
+          });
+          console.log(`Documento adicionado ao Firestore para ${imageFileName}`);
 
-        const imageId = `page-${i}-${Date.now()}`;
-        const storageRef = ref(storage, `catalog/${imageId}`);
-        await uploadBytes(storageRef, imageBlob);
-
-        const downloadURL = await getDownloadURL(storageRef);
-
-        const imageCollection = collection(db, 'catalog');
-        await addDoc(imageCollection, {
-          imageUrl: downloadURL,
-          position: i + 1,
-          createdAt: new Date(),
-        });
-
-        setProgress(((i + 1) / numPages) * 100);
+          setProgress(((i + 1) / totalFiles) * 100);
+        } catch (error) {
+          console.error(`Erro ao processar o arquivo ${imageFiles[i]}:`, error);
+        }
       }
 
       onSuccess();
     } catch (error) {
-      console.error('Erro ao processar PDF: ', error);
+      console.error('Erro ao processar o arquivo ZIP:', error);
     } finally {
       setLoading(false);
       setProgress(100);
@@ -130,8 +121,8 @@ const ImageForm: React.FC<ImageFormProps> = ({ onSuccess, imageId, initialPositi
         <Button type="submit" disabled={loading}>Adicionar Imagem</Button>
       </Form>
       <hr />
-      <h3 className="mt-4">Importar PDF</h3>
-      <input type="file" accept=".pdf" onChange={handlePdfUpload} disabled={loading} />
+      <h3 className="mt-4">Importar Arquivo ZIP</h3>
+      <input type="file" accept=".zip" onChange={handleZipUpload} disabled={loading} />
       {loading && <ProgressBar now={progress} label={`${Math.round(progress)}%`} />}
     </Container>
   );
