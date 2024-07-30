@@ -13,14 +13,14 @@ const App: React.FC = () => {
 
   return (
     <div>
-      <nav className="navbar navbar-light bg-light">
+      <nav className="navbar navbar-light bg-light shadow-sm">
         <div className="container d-flex justify-content-between">
           <button className="btn btn-outline-secondary" onClick={handleShow}>
             <span className="navbar-toggler-icon"></span>
           </button>
           <a className="navbar-brand d-flex align-items-center" href="#">
-            <img src={logo} alt="Catálogo Fácil" width="30" height="30" className="mr-2" />
             <span>Catálogo Fácil</span>
+            <img src={logo} alt="Catálogo Fácil" width="30" height="30" className="mr-2" />
           </a>
         </div>
       </nav>
@@ -34,6 +34,7 @@ const App: React.FC = () => {
             <li className="nav-item">
               <a className="nav-link" href="#catalogo" onClick={handleClose}>Catálogo</a>
             </li>
+            <hr />
             <li className="nav-item">
               <a className="nav-link" href="#ofertas" onClick={handleClose}>Ofertas</a>
             </li>
@@ -41,7 +42,7 @@ const App: React.FC = () => {
         </OffcanvasBody>
       </Offcanvas>
 
-      <div className="container" style={{ paddingTop: '45px' }}>
+      <div className="container mt-4">
         <div className="card shadow-sm p-4 mb-4">
           <ImageForm onSuccess={() => { window.location.reload(); }} />
         </div>
