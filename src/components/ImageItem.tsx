@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
-import { deleteCatalogItem } from '../services/dataAcess/imageAcess';
-import { Modal } from 'react-bootstrap';
+import { deleteCatalogItem, updateCatalogItemPosition } from '../services/dataAcess/imageAcess';
+import { Modal, Form, Button } from 'react-bootstrap';
 
 interface ImageItemProps {
   image: {
@@ -14,10 +14,18 @@ interface ImageItemProps {
 const ImageItem: React.FC<ImageItemProps> = ({ image, onDelete }) => {
   const [hovered, setHovered] = useState(false);
   const [showModal, setShowModal] = useState(false);
+  const [newPosition, setNewPosition] = useState(image.position);
 
   const handleDelete = async () => {
     await deleteCatalogItem(image.id);
     onDelete();
+  };
+
+  const handlePositionChange = async () => {
+    if (newPosition !== image.position) {
+      await updateCatalogItemPosition(image.id, newPosition);
+      onDelete();
+    }
   };
 
   return (
@@ -44,7 +52,7 @@ const ImageItem: React.FC<ImageItemProps> = ({ image, onDelete }) => {
             }}
             onClick={() => setShowModal(true)}
           >
-            Visualizar imagem
+            Visualizar / Editar
           </button>
         )}
       </div>
@@ -63,6 +71,15 @@ const ImageItem: React.FC<ImageItemProps> = ({ image, onDelete }) => {
             alt={`Image ${image.position}`} 
             style={{ width: '100%', height: '100%', objectFit: 'contain' }} 
           />
+          <Form.Group className="mt-3">
+            <Form.Label><strong>Nova Posição:</strong></Form.Label>
+            <Form.Control 
+              type="number" 
+              value={newPosition} 
+              onChange={(e) => setNewPosition(Number(e.target.value))} 
+            />
+            <Button className="mt-2" onClick={handlePositionChange}>Salvar</Button>
+          </Form.Group>
         </Modal.Body>
       </Modal>
     </div>

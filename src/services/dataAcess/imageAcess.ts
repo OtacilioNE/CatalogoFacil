@@ -56,6 +56,20 @@ export async function getCatalogItems() {
   }
 }
 
+export async function updateCatalogItemPosition(docId: string, newPosition: number) {
+  try {
+    const docRef = doc(db, "catalog", docId);
+    await updateDoc(docRef, {
+      position: newPosition,
+      updatedAt: new Date(),
+    });
+    console.log("Posição da imagem atualizada com sucesso!");
+  } catch (error) {
+    console.error("Erro ao atualizar posição da imagem: ", error);
+  }
+}
+
+
 export async function updateCatalogItem(
   docId: string,
   newPosition: number,
@@ -93,7 +107,7 @@ export async function deleteCatalogItem(docId: string) {
           const imageUrl = data?.imageUrl;
 
           if (imageUrl) {
-              // Extrai o caminho do arquivo da URL
+         
               const filePath = decodeURIComponent(imageUrl.split("/o/")[1].split("?")[0]);
               const storageRef = ref(storage, filePath);
               await deleteObject(storageRef);
