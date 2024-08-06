@@ -17,7 +17,7 @@ const ImageList: React.FC = () => {
 
   return (
     <div>
-      <h2 className="my-4 text-center">Galeria de Imagens</h2>
+      <h2 className="my-4 text-center">Catálogo</h2>
       <hr />
       <div className="row">
         {images.map(image => (
